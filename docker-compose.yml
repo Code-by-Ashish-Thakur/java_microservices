@@ -1,0 +1,65 @@
+# ============================================================
+# DOCKER COMPOSE - Infrastructure for Microservices
+# ============================================================
+# This starts the infrastructure services needed:
+#   1. Zookeeper (required by Kafka)
+#   2. Apache Kafka (event streaming)
+#   3. RabbitMQ (task queue + management UI)
+#
+# USAGE:
+#   Start:  docker-compose up -d
+#   Stop:   docker-compose down
+#   Logs:   docker-compose logs -f kafka
+#   Status: docker-compose ps
+#
+# PORTS:
+#   Kafka:              localhost:9092
+#   RabbitMQ:           localhost:5672 (AMQP)
+#   RabbitMQ Dashboard: localhost:15672 (user: guest, pass: guest)
+#   Zookeeper:          localhost:2181
+# ============================================================
+
+version: '3.8'
+
+services:
+
+  # ==================== ZOOKEEPER ====================
+  # Kafka needs Zookeeper for cluster coordination
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  # ==================== APACHE KAFKA ====================
+  # Event streaming platform for async communication
+  # Topics are auto-created when services publish to them
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  # ==================== RABBITMQ ====================
+  # Message broker for task queues (email sending)
+  # Management plugin provides a web UI dashboard
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # AMQP protocol port
+      - "15672:15672"   # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest

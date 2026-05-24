@@ -1,0 +1,64 @@
+# ============================================================
+# NOTIFICATION SERVICE CONFIGURATION
+# ============================================================
+# Port: 8082
+# Database: H2 in-memory (notificationdb)
+# Kafka: Consumer (student, course, enrollment, payment events)
+# RabbitMQ: Producer (dispatches email tasks to email.queue)
+# ============================================================
+# THIS SERVICE IS THE BRIDGE:
+#   Kafka (event bus) → Notification Service → RabbitMQ (task queue)
+#
+# WHY TWO MESSAGE BROKERS?
+#   - Kafka: "Something happened" (events, multiple consumers)
+#   - RabbitMQ: "Do this job" (tasks, single consumer, ack/retry)
+#
+# Kafka is great for event streaming (fan-out to many consumers)
+# RabbitMQ is great for work queues (guaranteed delivery, retries)
+# ============================================================
+
+server:
+  port: 8082
+
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:h2:mem:notificationdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Kafka Consumer Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: >
+          com.enrollment.studentservice.dto.StudentEvent:com.enrollment.notificationservice.dto.StudentEvent,
+          com.enrollment.courseservice.dto.CourseEvent:com.enrollment.notificationservice.dto.CourseEvent,
+          com.enrollment.enrollmentservice.dto.EnrollmentEvent:com.enrollment.notificationservice.dto.EnrollmentEvent,
+          com.enrollment.paymentservice.dto.PaymentEvent:com.enrollment.notificationservice.dto.PaymentEvent
+      auto-offset-reset: earliest
+
+  # RabbitMQ Configuration
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest

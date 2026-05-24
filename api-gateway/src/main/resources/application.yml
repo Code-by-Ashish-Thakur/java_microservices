@@ -1,0 +1,68 @@
+# ============================================================
+# API GATEWAY CONFIGURATION - Spring Cloud Gateway
+# ============================================================
+# Port: 8080 (single entry point for ALL services)
+#
+# WHY AN API GATEWAY?
+#   Without gateway: Client must know every service's port
+#     - http://localhost:8081/api/students
+#     - http://localhost:8083/api/courses
+#     - http://localhost:8084/api/enrollments
+#
+#   With gateway: Client uses ONE URL
+#     - http://localhost:8080/api/students
+#     - http://localhost:8080/api/courses
+#     - http://localhost:8080/api/enrollments
+#
+# GATEWAY RESPONSIBILITIES:
+#   1. Routing: Forward requests to correct service
+#   2. Load balancing (with service discovery)
+#   3. Cross-cutting concerns (auth, logging, rate limiting)
+#   4. Single entry point for frontend/mobile apps
+# ============================================================
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        # Student Service routes
+        - id: student-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/students/**
+
+        # Course Service routes
+        - id: course-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/courses/**
+
+        # Enrollment Service routes
+        - id: enrollment-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/enrollments/**
+
+        # Payment Service routes
+        - id: payment-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/payments/**
+
+        # Notification Service routes
+        - id: notification-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/notifications/**
+
+        # Email Worker health check
+        - id: email-worker-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/email-worker/**

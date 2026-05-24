@@ -1,0 +1,42 @@
+# ============================================================
+# EMAIL WORKER SERVICE CONFIGURATION
+# ============================================================
+# Port: 8086
+# Database: NONE (stateless worker)
+# RabbitMQ: Consumer only (processes email.queue)
+# ============================================================
+# This is a BACKGROUND WORKER pattern:
+#   - No database needed (stateless)
+#   - Only consumes from RabbitMQ and "does work"
+#   - Can be scaled horizontally (run multiple instances)
+#   - If it crashes, unacked messages return to the queue
+#
+# SCALING:
+#   Run 3 instances of this service on ports 8086, 8096, 8106
+#   RabbitMQ automatically distributes messages across them
+#   This is the "Competing Consumers" pattern
+# ============================================================
+
+server:
+  port: 8086
+
+spring:
+  application:
+    name: email-worker-service
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        # Retry configuration for failed messages
+        retry:
+          enabled: true
+          initial-interval: 1000      # 1 second before first retry
+          multiplier: 2.0             # exponential backoff (1s, 2s, 4s)
+          max-attempts: 3             # try 3 times before sending to DLQ
+          max-interval: 10000         # max 10 seconds between retries
+        # Process one message at a time (easier to debug)
+        prefetch: 1

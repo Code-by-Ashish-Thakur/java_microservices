@@ -1,0 +1,55 @@
+# ============================================================
+# ENROLLMENT SERVICE CONFIGURATION
+# ============================================================
+# Port: 8084
+# Database: H2 in-memory (enrollmentdb)
+# Kafka: Producer (enrollment-events) + Consumer (payment-events)
+# ============================================================
+# THIS SERVICE IS BOTH A KAFKA PRODUCER AND CONSUMER:
+#   - PRODUCES: enrollment-events (when student enrolls)
+#   - CONSUMES: payment-events (to update enrollment status)
+#
+# This demonstrates the Saga Pattern:
+#   1. Enrollment created (status: PENDING)
+#   2. Payment service processes payment
+#   3. Payment event received → status updated to CONFIRMED/FAILED
+# ============================================================
+
+server:
+  port: 8084
+
+spring:
+  application:
+    name: enrollment-service
+
+  datasource:
+    url: jdbc:h2:mem:enrollmentdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Kafka - both producer AND consumer config
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: enrollment-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.enrollment.enrollmentservice.dto.PaymentEvent
+      auto-offset-reset: earliest

@@ -1,0 +1,5 @@
+D:\java development learning\microservices-learning\email-worker-service\src\main\java\com\enrollment\emailworkerservice\rabbitmq\EmailConsumer.java
+D:\java development learning\microservices-learning\email-worker-service\src\main\java\com\enrollment\emailworkerservice\config\RabbitMQConfig.java
+D:\java development learning\microservices-learning\email-worker-service\src\main\java\com\enrollment\emailworkerservice\dto\EmailMessage.java
+D:\java development learning\microservices-learning\email-worker-service\src\main\java\com\enrollment\emailworkerservice\controller\HealthController.java
+D:\java development learning\microservices-learning\email-worker-service\src\main\java\com\enrollment\emailworkerservice\EmailWorkerServiceApplication.java
